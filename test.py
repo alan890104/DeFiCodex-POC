@@ -251,8 +251,8 @@ if __name__ == "__main__":
         # "AAVE V3 Collateral Enabled": aave_v3_collateral_enabled,
         # "AAVE V3 Collateral Disabled": aave_v3_collateral_disabled,
         # #
-        # "Compound V3 Supply": compound_v3_supply,
-        # "Compound V3 Supply Collateral": compound_v3_supply_collateral,
+        "Compound V3 Supply": compound_v3_supply,
+        "Compound V3 Supply Collateral": compound_v3_supply_collateral,
         "Compound V3 Withdraw": compound_v3_withdraw,
     }
 

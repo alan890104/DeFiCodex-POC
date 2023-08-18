@@ -551,9 +551,17 @@ class CompoundV3Decoder(BaseDecoder):
         event_sig = "Supply(address,address,uint256)"
 
         def decoder(payload: EventPayload) -> str:
-            template = "Supply {amount} {token} to {protocol}"
-            token_addr = payload["params"]["cToken"]
-            return ""
+            template = "Supply {amount} {token} to {dst}"
+            token_addr = payload["address"]
+            (token_decimals,) = self._get_token_decimals(token_addr)
+            params = payload["params"]
+            amount = params["__idx_2"] / 10**token_decimals
+            dst = params["__idx_1"]
+            return template.format(
+                amount=amount,
+                token=get_addr_entry(token_addr),
+                dst=get_addr_entry(dst),
+            )
 
         return event_sig, decoder
 
