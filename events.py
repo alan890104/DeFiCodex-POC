@@ -505,6 +505,59 @@ class AAVEV3Decoder(BaseDecoder):
         return event_sig, decoder
 
 
+class CompoundV3Decoder(BaseDecoder):
+    def __init__(self, mc: Multicall, logger: logging.Logger = None):
+        super().__init__(mc, logger)
+
+    def supply_collateral(self) -> Tuple[str, HandleEventFunc]:
+        # SupplyCollateral (index_topic_1 address from, index_topic_2 address dst, index_topic_3 address asset, uint256 amount)
+        event_sig = "SupplyCollateral(address,address,address,uint256)"
+
+        def decoder(payload: EventPayload) -> str:
+            template = "Supply {amount} {token} to {protocol}"
+            token_addr = payload["params"]["asset"]
+            (token_decimals,) = self._get_token_decimals(token_addr)
+            amount = payload["params"]["amount"] / 10**token_decimals
+
+            return template.format(
+                amount=amount,
+                token=get_addr_entry(token_addr),
+                protocol=get_addr_entry(payload["address"]),
+            )
+
+        return event_sig, decoder
+
+    def withdraw(self) -> Tuple[str, HandleEventFunc]:
+        # Withdraw (index_topic_1 address src, index_topic_2 address to, uint256 amount)
+        event_sig = "Withdraw(address,address,uint256)"
+
+        def decoder(payload: EventPayload) -> str:
+            template = "Withdraw {amount} {token} to {reciver}"
+            token_addr = payload["address"]
+            (token_decimals,) = self._get_token_decimals(token_addr)
+            params = payload["params"]
+            amount = params["__idx_2"] / 10**token_decimals
+            recieiver = params["__idx_1"]
+            return template.format(
+                amount=amount,
+                token=get_addr_entry(token_addr),
+                reciver=get_addr_entry(recieiver),
+            )
+
+        return event_sig, decoder
+
+    def supply(self) -> Tuple[str, HandleEventFunc]:
+        # Supply (index_topic_1 address from, index_topic_2 address dst, uint256 amount)
+        event_sig = "Supply(address,address,uint256)"
+
+        def decoder(payload: EventPayload) -> str:
+            template = "Supply {amount} {token} to {protocol}"
+            token_addr = payload["params"]["cToken"]
+            return ""
+
+        return event_sig, decoder
+
+
 class EventLogsDecoder:
     def __init__(
         self,
@@ -544,7 +597,8 @@ class EventLogsDecoder:
 
     def _get_abi_text_sign(self, byte_sign: str) -> Tuple[str, str]:
         filtered = self.evt_df["byte_sign"] == byte_sign
-        return self.evt_df[filtered][["abi", "text_sign"]].values[0]
+        candidate = self.evt_df[filtered][["abi", "text_sign"]].values
+        return candidate[0]
 
     def decode(self, log: Log) -> str:
         if len(log.topics) == 0:

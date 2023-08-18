@@ -2,7 +2,13 @@
 
 ## Setup
 
-1. Download label dataset from [etherscan repo](https://github.com/brianleect/etherscan-labels)
+1. Edit `.env` file
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Add your own configuration to `.env` file
 
 2. create a virtual environment and install requirements
 
@@ -12,7 +18,13 @@
     pip install -r requirements.txt
     ```
 
-3. Run the script
+3. Export environment variables
+
+    ```bash
+    export $(grep -v '^#' .env | xargs -d '\n')
+    ```
+
+4. Run the script
 
     ```bash
     python3 main.py

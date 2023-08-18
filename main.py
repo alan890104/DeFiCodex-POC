@@ -27,7 +27,13 @@ import pandas as pd
 from multicall import Multicall
 
 from events import EventLogsDecoder
-from events import UniswapV2Decoder, UniswapV3Decoder, AAVEV3Decoder, AAVEV2Decoder
+from events import (
+    UniswapV2Decoder,
+    UniswapV3Decoder,
+    AAVEV3Decoder,
+    AAVEV2Decoder,
+    CompoundV3Decoder,
+)
 
 from sqlalchemy.orm import sessionmaker
 from model import Log, Transaction
@@ -58,12 +64,14 @@ if __name__ == "__main__":
     uniswap_v3 = UniswapV3Decoder(mc=mc, logger=logger)
     aave_v2 = AAVEV2Decoder(mc=mc, logger=logger)
     aave_v3 = AAVEV3Decoder(mc=mc, logger=logger)
+    compound_v3 = CompoundV3Decoder(mc=mc, logger=logger)
 
     evt_decoder = EventLogsDecoder(evt_df=df, verbose=True, logger=logger)
     evt_decoder.register_class(uniswap_v2)
     evt_decoder.register_class(uniswap_v3)
     evt_decoder.register_class(aave_v2)
     evt_decoder.register_class(aave_v3)
+    evt_decoder.register_class(compound_v3)
 
     Session = sessionmaker(bind=engine)
     with Session() as session:
@@ -87,4 +95,3 @@ if __name__ == "__main__":
             if decoded:
                 actions.append(decoded)
         print("\n".join(actions))
-        session.close()

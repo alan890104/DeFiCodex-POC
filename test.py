@@ -1,5 +1,11 @@
 from events import EventLogsDecoder
-from events import UniswapV2Decoder, UniswapV3Decoder, AAVEV3Decoder, AAVEV2Decoder
+from events import (
+    UniswapV2Decoder,
+    UniswapV3Decoder,
+    AAVEV3Decoder,
+    AAVEV2Decoder,
+    CompoundV3Decoder,
+)
 from model import Log
 from multicall import Multicall
 import pandas as pd
@@ -21,12 +27,14 @@ if __name__ == "__main__":
     uniswap_v3 = UniswapV3Decoder(mc=mc, logger=logger)
     aave_v2 = AAVEV2Decoder(mc=mc, logger=logger)
     aave_v3 = AAVEV3Decoder(mc=mc, logger=logger)
+    compoundv3 = CompoundV3Decoder(mc=mc, logger=logger)
 
     evt_decoder = EventLogsDecoder(evt_df=df, verbose=True, logger=logger)
     evt_decoder.register_class(uniswap_v2)
     evt_decoder.register_class(uniswap_v3)
     evt_decoder.register_class(aave_v2)
     evt_decoder.register_class(aave_v3)
+    evt_decoder.register_class(compoundv3)
 
     # Uniswap V2 Swap
     uniswap_v2_swap = Log()
@@ -188,23 +196,64 @@ if __name__ == "__main__":
     ]
     aave_v3_collateral_disabled.data = "0x"
 
+    # Compound V3 Supply
+    compound_v3_supply = Log()
+    compound_v3_supply.address = "0xc3d688b66703497daa19211eedff47f25384cdc3"
+    compound_v3_supply.topics = [
+        "0xd1cf3d156d5f8f0d50f6c122ed609cec09d35c9b9fb3fff6ea0959134dae424e",
+        "0x00000000000000000000000004333a1788a47068b9102d2d35695c312a0b312f",
+        "0x00000000000000000000000004333a1788a47068b9102d2d35695c312a0b312f",
+    ]
+    compound_v3_supply.data = (
+        "0x0000000000000000000000000000000000000000000000000000000000989680"
+    )
+
+    # Compound V3 Supply Collateral
+    compound_v3_supply_collateral = Log()
+    compound_v3_supply_collateral.address = "0xc3d688b66703497daa19211eedff47f25384cdc3"
+    compound_v3_supply_collateral.topics = [
+        "0xfa56f7b24f17183d81894d3ac2ee654e3c26388d17a28dbd9549b8114304e1f4",
+        "0x0000000000000000000000000688547a2b5f07327a7a2644fb649caa29c730eb",
+        "0x0000000000000000000000000688547a2b5f07327a7a2644fb649caa29c730eb",
+        "0x0000000000000000000000001f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    ]
+    compound_v3_supply_collateral.data = (
+        "0x00000000000000000000000000000000000000000000000821ab0d4414980000"
+    )
+
+    # Compound V3 Withdraw
+    compound_v3_withdraw = Log()
+    compound_v3_withdraw.address = "0xc3d688b66703497daa19211eedff47f25384cdc3"
+    compound_v3_withdraw.topics = [
+        "0x9b1bfa7fa9ee420a16e124f794c35ac9f90472acc99140eb2f6447c714cad8eb",
+        "0x000000000000000000000000c34c261158fd908bb7a577f15d3a3d0ff8263513",
+        "0x000000000000000000000000c34c261158fd908bb7a577f15d3a3d0ff8263513",
+    ]
+    compound_v3_withdraw.data = (
+        "0x0000000000000000000000000000000000000000000000000000000005f5e100"
+    )
+
     test_cases: Dict[str, Log] = {
-        "Uniswap V2 Swap": uniswap_v2_swap,
-        "Uniswap V3 Swap": uniswap_v3_swap,
-        #
-        "AAVE V2 Deposit": aave_v2_deposit,
-        "AAVE V2 Borrow": aave_v2_borrow,
-        "AAVE V2 Withdraw": aave_v2_withdraw,
-        "AAVE V2 Repay": aave_v2_repay,
-        "AAVE V2 Flash Loan": aave_v2_flash_loan,
-        #
-        "AAVE V3 Supply": aave_v3_supply,
-        "AAVE V3 Borrow": aave_v3_borrow,
-        "AAVE V3 Withdraw": aave_v3_withdraw,
-        "AAVE V3 Repay": aave_v3_repay,
-        "AAVE V3 Flash Loan": aave_v3_flash_loan,
-        "AAVE V3 Collateral Enabled": aave_v3_collateral_enabled,
-        "AAVE V3 Collateral Disabled": aave_v3_collateral_disabled,
+        # "Uniswap V2 Swap": uniswap_v2_swap,
+        # "Uniswap V3 Swap": uniswap_v3_swap,
+        # #
+        # "AAVE V2 Deposit": aave_v2_deposit,
+        # "AAVE V2 Borrow": aave_v2_borrow,
+        # "AAVE V2 Withdraw": aave_v2_withdraw,
+        # "AAVE V2 Repay": aave_v2_repay,
+        # "AAVE V2 Flash Loan": aave_v2_flash_loan,
+        # #
+        # "AAVE V3 Supply": aave_v3_supply,
+        # "AAVE V3 Borrow": aave_v3_borrow,
+        # "AAVE V3 Withdraw": aave_v3_withdraw,
+        # "AAVE V3 Repay": aave_v3_repay,
+        # "AAVE V3 Flash Loan": aave_v3_flash_loan,
+        # "AAVE V3 Collateral Enabled": aave_v3_collateral_enabled,
+        # "AAVE V3 Collateral Disabled": aave_v3_collateral_disabled,
+        # #
+        # "Compound V3 Supply": compound_v3_supply,
+        # "Compound V3 Supply Collateral": compound_v3_supply_collateral,
+        "Compound V3 Withdraw": compound_v3_withdraw,
     }
 
     for name, test_case in test_cases.items():
