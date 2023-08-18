@@ -1,4 +1,4 @@
-# Ethereum Transaction Decoder
+# DeFiCodex
 
 ## Setup
 
