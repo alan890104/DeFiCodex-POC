@@ -29,3 +29,17 @@
     ```bash
     python3 main.py
     ```
+
+
+If you have used this project in your paper or report, please cite the following BibTeX entry:
+
+
+```BibTeX 
+@misc{DeFiCodex,
+  title = {{DeFiCodex}},
+  author = {{Yu Lun Hsu}},
+  year = {2023},
+  howpublished = {\url{https://github.com/alan890104/DeFiCodex}},
+  note = {Accessed: August 19, 2023}
+}
+```
