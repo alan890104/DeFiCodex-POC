@@ -248,7 +248,7 @@ class UniswapV2Decoder(BaseUniswapDecoder):
         event_sig = "Swap(address,uint256,uint256,uint256,uint256,address)"
 
         def decoder(payload: EventPayload) -> str:
-            template = "Swap {pay_amount} {pay_token} for {get_amount} {get_token}"
+            template = "Swap {pay_amount} {pay_token} for {get_amount} {get_token} on UniswapV2"
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
             token0_decimals, token1_decimals = self._get_token_decimals(
                 [token0_addr, token1_addr]
@@ -383,7 +383,7 @@ class UniswapV3Decoder(BaseUniswapDecoder):
         event_sig = "Swap(address,address,int256,int256,uint160,uint128,int24)"
 
         def decoder(payload: EventPayload) -> str:
-            template = "Swap {pay_amount} {pay_token} for {get_amount} {get_token}"
+            template = "Swap {pay_amount} {pay_token} for {get_amount} {get_token} on UniswapV3"
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
             token0, token1 = get_addr_entry(token0_addr), get_addr_entry(token1_addr)
             amount0, amount1 = (
@@ -693,7 +693,7 @@ class CompoundV3Decoder(BaseDecoder):
         event_sig = "SupplyCollateral(address,address,address,uint256)"
 
         def decoder(payload: EventPayload) -> str:
-            template = "Supply {amount} {token} to {protocol}"
+            template = "Supply {amount} {token} as collateral to {protocol}"
             token_addr = payload["params"]["asset"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
@@ -711,7 +711,7 @@ class CompoundV3Decoder(BaseDecoder):
         event_sig = "Withdraw(address,address,uint256)"
 
         def decoder(payload: EventPayload) -> str:
-            template = "Withdraw {amount} {token} to {reciver}"
+            template = "Withdraw {amount} {token} to {reciver} on Compound"
             token_addr = payload["address"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             params = payload["params"]
@@ -730,7 +730,7 @@ class CompoundV3Decoder(BaseDecoder):
         event_sig = "Supply(address,address,uint256)"
 
         def decoder(payload: EventPayload) -> str:
-            template = "Supply {amount} {token} to {dst}"
+            template = "Supply {amount} {token} to {dst} on Compound"
             token_addr = payload["address"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             params = payload["params"]
@@ -740,6 +740,82 @@ class CompoundV3Decoder(BaseDecoder):
                 amount=amount,
                 token=get_addr_entry(token_addr),
                 dst=get_addr_entry(dst),
+            )
+
+        return event_sig, decoder
+
+
+class BancorV3Decoder(BaseDecoder):
+    def __init__(self, mc: Multicall, logger: logging.Logger = None):
+        super().__init__(mc, logger)
+
+    def tokens_traded(self) -> Tuple[str, HandleEventFunc]:
+        # TokensTraded (index_topic_1 bytes32 contextId, index_topic_2 address sourceToken, index_topic_3 address targetToken, uint256 sourceAmount, uint256 targetAmount, uint256 bntAmount, uint256 targetFeeAmount, uint256 bntFeeAmount, address trader)
+        event_sig = "TokensTraded(bytes32,address,address,uint256,uint256,uint256,uint256,uint256,address)"
+
+        def decoder(payload: EventPayload) -> str:
+            template = "Trade {amount} {token} for {get_amount} {get_token} on Bancor"
+            token_addr = payload["params"]["sourceToken"]
+            get_token_addr = payload["params"]["targetToken"]
+            (token_decimals, get_token_decimals) = self._get_token_decimals(
+                [token_addr, get_token_addr]
+            )
+            params = payload["params"]
+            amount = params["sourceAmount"] / 10**token_decimals
+            get_amount = params["targetAmount"] / 10**get_token_decimals
+            return template.format(
+                amount=amount,
+                token=get_addr_entry(token_addr),
+                get_amount=get_amount,
+                get_token=get_addr_entry(get_token_addr),
+            )
+
+        return event_sig, decoder
+
+    def funds_withdrawn(self) -> Tuple[str, HandleEventFunc]:
+        # FundsWithdrawn (index_topic_1 address token, index_topic_2 address caller, index_topic_3 address target, uint256 amount)
+        event_sig = "FundsWithdrawn(address,address,address,uint256)"
+
+        def decoder(payload: EventPayload) -> str:
+            template = "Withdraw {amount} {token} from {protocol}"
+            token_addr = payload["params"]["token"]
+            (token_decimals,) = self._get_token_decimals(token_addr)
+            params = payload["params"]
+            amount = params["amount"] / 10**token_decimals
+            return template.format(
+                amount=amount,
+                token=get_addr_entry(token_addr),
+                protocol=get_addr_entry(payload["address"]),
+            )
+
+        return event_sig, decoder
+
+
+class CurveV2Decoder(BaseDecoder):
+    def __init__(self, mc: Multicall, logger: logging.Logger = None):
+        super().__init__(mc, logger)
+
+    def token_exchange(self) -> Tuple[str, HandleEventFunc]:
+        # TokenExchange (index_topic_1 address buyer, index_topic_2 address receiver, index_topic_3 address pool, address token_sold, address token_bought, uint256 amount_sold, uint256 amount_bought)
+        event_sig = (
+            "TokenExchange(address,address,address,address,address,uint256,uint256)"
+        )
+
+        def decoder(payload: EventPayload) -> str:
+            template = "Exchange {amount} {token} for {get_amount} {get_token} on Curve"
+            token_addr = payload["params"]["token_sold"]
+            get_token_addr = payload["params"]["token_bought"]
+            (token_decimals, get_token_decimals) = self._get_token_decimals(
+                [token_addr, get_token_addr]
+            )
+            params = payload["params"]
+            amount = params["amount_sold"] / 10**token_decimals
+            get_amount = params["amount_bought"] / 10**get_token_decimals
+            return template.format(
+                amount=amount,
+                token=get_addr_entry(token_addr),
+                get_amount=get_amount,
+                get_token=get_addr_entry(get_token_addr),
             )
 
         return event_sig, decoder

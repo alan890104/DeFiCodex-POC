@@ -33,6 +33,8 @@ from decoder import (
     AAVEV3Decoder,
     AAVEV2Decoder,
     CompoundV3Decoder,
+    BancorV3Decoder,
+    CurveV2Decoder,
 )
 
 from sqlalchemy.orm import sessionmaker
@@ -69,6 +71,8 @@ if __name__ == "__main__":
     aave_v2 = AAVEV2Decoder(mc=mc, logger=logger)
     aave_v3 = AAVEV3Decoder(mc=mc, logger=logger)
     compound_v3 = CompoundV3Decoder(mc=mc, logger=logger)
+    bancor_v3 = BancorV3Decoder(mc=mc, logger=logger)
+    curve_v2 = CurveV2Decoder(mc=mc, logger=logger)
 
     evt_decoder = EventLogsDecoder(evt_df=df, verbose=True, logger=logger)
     evt_decoder.register_class(uniswap_v2)
@@ -76,6 +80,8 @@ if __name__ == "__main__":
     evt_decoder.register_class(aave_v2)
     evt_decoder.register_class(aave_v3)
     evt_decoder.register_class(compound_v3)
+    evt_decoder.register_class(bancor_v3)
+    evt_decoder.register_class(curve_v2)
 
     p = get_provider("web3", w3=Web3(Web3.HTTPProvider(provider_url)))
 

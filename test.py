@@ -5,6 +5,8 @@ from decoder import (
     AAVEV3Decoder,
     AAVEV2Decoder,
     CompoundV3Decoder,
+    BancorV3Decoder,
+    CurveV2Decoder,
 )
 from model import Log
 from multicall import Multicall
@@ -31,14 +33,18 @@ if __name__ == "__main__":
     uniswap_v3 = UniswapV3Decoder(mc=mc, logger=logger)
     aave_v2 = AAVEV2Decoder(mc=mc, logger=logger)
     aave_v3 = AAVEV3Decoder(mc=mc, logger=logger)
-    compoundv3 = CompoundV3Decoder(mc=mc, logger=logger)
+    compound_v3 = CompoundV3Decoder(mc=mc, logger=logger)
+    bancor_v3 = BancorV3Decoder(mc=mc, logger=logger)
+    curve_v2 = CurveV2Decoder(mc=mc, logger=logger)
 
     evt_decoder = EventLogsDecoder(evt_df=df, verbose=True, logger=logger)
     evt_decoder.register_class(uniswap_v2)
     evt_decoder.register_class(uniswap_v3)
     evt_decoder.register_class(aave_v2)
     evt_decoder.register_class(aave_v3)
-    evt_decoder.register_class(compoundv3)
+    evt_decoder.register_class(compound_v3)
+    evt_decoder.register_class(bancor_v3)
+    evt_decoder.register_class(curve_v2)
 
     # Uniswap V2 Swap
     uniswap_v2_swap = LogDict()
@@ -259,6 +265,45 @@ if __name__ == "__main__":
         "data"
     ] = "0x0000000000000000000000000000000000000000000000000000000005f5e100"
 
+    # Bancor Token Traded
+    bancor_token_traded = LogDict()
+    bancor_token_traded["address"] = "0xeEF417e1D5CC832e619ae18D2F140De2999dD4fB"
+    bancor_token_traded["topics"] = [
+        "0x5c02c2bb2d1d082317eb23916ca27b3e7c294398b60061a2ad54f1c3c018c318",
+        "0xfdb425aa7f7034e3d6a5a63406dd643f409da01e5979018bcee9ba3c9c40af10",
+        "0x000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7",
+        "0x00000000000000000000000048fb253446873234f2febbf9bdeaa72d9d387f94",
+    ]
+    bancor_token_traded[
+        "data"
+    ] = "0x00000000000000000000000000000000000000000000000000000000354e15a700000000000000000000000000000000000000000000009411f203594e30bb780000000000000000000000000000000000000000000000736de59a3343ddcc06000000000000000000000000000000000000000000000002413f764e07b02c700000000000000000000000000000000000000000000000012a7bdac50b07697e000000000000000000000000394c9cef1e5dff6a0a289facb89d4a15da3efaf6"
+
+    # Bancor Fund Withdrawn
+    bancor_fund_withdrawn = LogDict()
+    bancor_fund_withdrawn["address"] = "0x649765821d9f64198c905ec0b2b037a4a52bc373"
+    bancor_fund_withdrawn["topics"] = [
+        "0xc322efa58c9cb2c39cfffdac61d35c8643f5cbf13c6a7d0034de2cf18923aff3",
+        "0x00000000000000000000000048fb253446873234f2febbf9bdeaa72d9d387f94",
+        "0x000000000000000000000000eef417e1d5cc832e619ae18d2f140de2999dd4fb",
+        "0x000000000000000000000000394c9cef1e5dff6a0a289facb89d4a15da3efaf6",
+    ]
+    bancor_fund_withdrawn[
+        "data"
+    ] = "0x00000000000000000000000000000000000000000000009411f203594e30bb78"
+
+    # Curve V2 Token Exchange
+    curve_v2_token_exchange = LogDict()
+    curve_v2_token_exchange["address"] = "0x99a58482bd75cbab83b27ec03ca68ff489b5788f"
+    curve_v2_token_exchange["topics"] = [
+        "0xbd3eb7bcfdd1721a4eb4f00d0df3ed91bd6f17222f82b2d7bce519d8cab3fe46",
+        "0x0000000000000000000000006b600568ea5e9f07f7f9dc6e117bcab08f5b0e2f",
+        "0x000000000000000000000000d24c92375574112871fde8006a89926e932ed1f8",
+        "0x0000000000000000000000007fc77b5c7614e1533320ea6ddc2eb61fa00a9714",
+    ]
+    curve_v2_token_exchange[
+        "data"
+    ] = "0x000000000000000000000000fe18be6b3bd88a2d2a7f928d00292e7a9963cfc60000000000000000000000002260fac5e5542a773aa44fbcfedf7c193bc2c599000000000000000000000000000000000000000000000000377627f30f7ec6150000000000000000000000000000000000000000000000000000000017ccbde1"
+
     test_cases: Dict[str, Log] = {
         "Unknown Event": {"topics": ["0x123"]},
         #
@@ -282,6 +327,11 @@ if __name__ == "__main__":
         "Compound V3 Supply": compound_v3_supply,
         "Compound V3 Supply Collateral": compound_v3_supply_collateral,
         "Compound V3 Withdraw": compound_v3_withdraw,
+        #
+        "Bancor Token Traded": bancor_token_traded,
+        "Bancor Fund Withdrawn": bancor_fund_withdrawn,
+        #
+        "Curve V2 Token Exchange": curve_v2_token_exchange,
     }
 
     for name, test_case in test_cases.items():
