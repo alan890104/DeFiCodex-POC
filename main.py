@@ -82,9 +82,7 @@ if __name__ == "__main__":
     while True:
         txhash = input("Please enter txhash: ")
         tx = p.get_tx(txhash)
-        print(tx)
         results = evt_decoder.decode_all(tx["logs"])
-        print(results)
         for result in results:
             if result:
                 print(result)
