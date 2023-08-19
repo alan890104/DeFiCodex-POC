@@ -804,3 +804,6 @@ class EventLogsDecoder:
         abi = json.loads(abi)
         _, params = eth_decode_log(abi, topics, log.get("data", "0x"))
         return handler({"address": log["address"], "params": params})
+
+    def decode_all(self, logs: List[LogDict]) -> List[str]:
+        return [self.decode(log) for log in logs]

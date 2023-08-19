@@ -72,7 +72,7 @@ class Web3Provider:
             {
                 "logpos": log["logIndex"],
                 "address": log["address"],
-                "topics": log["topics"],
+                "topics": [topic.hex() for topic in log["topics"] if topic],
                 "data": log["data"],
             }
             for log in logs

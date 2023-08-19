@@ -80,6 +80,11 @@ if __name__ == "__main__":
     p = get_provider("web3", w3=Web3(Web3.HTTPProvider(provider_url)))
 
     while True:
-        txhash = input("Please enter txhash:")
+        txhash = input("Please enter txhash: ")
         tx = p.get_tx(txhash)
-        evt_decoder.decode(tx["logs"])
+        print(tx)
+        results = evt_decoder.decode_all(tx["logs"])
+        print(results)
+        for result in results:
+            if result:
+                print(result)

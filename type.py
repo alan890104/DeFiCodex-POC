@@ -5,7 +5,7 @@ LogDict = TypedDict(
     {
         "logpos": int,
         "address": str,
-        "topics": str,
+        "topics": List[str],
         "data": str,
     },
 )
