@@ -234,23 +234,23 @@ if __name__ == "__main__":
     )
 
     test_cases: Dict[str, Log] = {
-        # "Uniswap V2 Swap": uniswap_v2_swap,
-        # "Uniswap V3 Swap": uniswap_v3_swap,
-        # #
-        # "AAVE V2 Deposit": aave_v2_deposit,
-        # "AAVE V2 Borrow": aave_v2_borrow,
-        # "AAVE V2 Withdraw": aave_v2_withdraw,
-        # "AAVE V2 Repay": aave_v2_repay,
-        # "AAVE V2 Flash Loan": aave_v2_flash_loan,
-        # #
-        # "AAVE V3 Supply": aave_v3_supply,
-        # "AAVE V3 Borrow": aave_v3_borrow,
-        # "AAVE V3 Withdraw": aave_v3_withdraw,
-        # "AAVE V3 Repay": aave_v3_repay,
-        # "AAVE V3 Flash Loan": aave_v3_flash_loan,
-        # "AAVE V3 Collateral Enabled": aave_v3_collateral_enabled,
-        # "AAVE V3 Collateral Disabled": aave_v3_collateral_disabled,
-        # #
+        "Uniswap V2 Swap": uniswap_v2_swap,
+        "Uniswap V3 Swap": uniswap_v3_swap,
+        #
+        "AAVE V2 Deposit": aave_v2_deposit,
+        "AAVE V2 Borrow": aave_v2_borrow,
+        "AAVE V2 Withdraw": aave_v2_withdraw,
+        "AAVE V2 Repay": aave_v2_repay,
+        "AAVE V2 Flash Loan": aave_v2_flash_loan,
+        #
+        "AAVE V3 Supply": aave_v3_supply,
+        "AAVE V3 Borrow": aave_v3_borrow,
+        "AAVE V3 Withdraw": aave_v3_withdraw,
+        "AAVE V3 Repay": aave_v3_repay,
+        "AAVE V3 Flash Loan": aave_v3_flash_loan,
+        "AAVE V3 Collateral Enabled": aave_v3_collateral_enabled,
+        "AAVE V3 Collateral Disabled": aave_v3_collateral_disabled,
+        #
         "Compound V3 Supply": compound_v3_supply,
         "Compound V3 Supply Collateral": compound_v3_supply_collateral,
         "Compound V3 Withdraw": compound_v3_withdraw,
