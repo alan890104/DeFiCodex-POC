@@ -26,8 +26,8 @@ from utils import (
 import pandas as pd
 from multicall import Multicall
 
-from events import EventLogsDecoder
-from events import (
+from decoder import EventLogsDecoder
+from decoder import (
     UniswapV2Decoder,
     UniswapV3Decoder,
     AAVEV3Decoder,
@@ -39,7 +39,11 @@ from sqlalchemy.orm import sessionmaker
 from model import Log, Transaction
 
 import logging
+from web3 import Web3
 
+from provider import get_provider
+
+w3 = Web3()
 
 logger = logging.getLogger("EventDecoder[Test]")
 handler = logging.StreamHandler()
@@ -53,13 +57,13 @@ db_password = getenv("DB_PASSWORD")
 db_host = getenv("DB_HOST")
 db_port = getenv("DB_PORT")
 db_name = getenv("DB_NAME")
+provider_url = getenv("WEB3_PROVIDER_URL")
 db_url = f"postgresql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
 engine = create_engine(db_url, echo=True)
 
 if __name__ == "__main__":
     df = pd.read_csv("func_sign.csv")
-
-    mc = Multicall("https://mainnet.infura.io/v3/84842078b09946638c03157f83405213")
+    mc = Multicall(provider_url)
     uniswap_v2 = UniswapV2Decoder(mc=mc, logger=logger)
     uniswap_v3 = UniswapV3Decoder(mc=mc, logger=logger)
     aave_v2 = AAVEV2Decoder(mc=mc, logger=logger)
@@ -73,25 +77,9 @@ if __name__ == "__main__":
     evt_decoder.register_class(aave_v3)
     evt_decoder.register_class(compound_v3)
 
-    Session = sessionmaker(bind=engine)
-    with Session() as session:
-        txhash = "0x074abc8ba8aaa1374c00844540711bf62795ddcef891daf815863f24fc36e5dc"
+    p = get_provider("web3", w3=Web3(Web3.HTTPProvider(provider_url)))
 
-        stmt_tx = select(Transaction).where(Transaction.txhash == txhash)
-        result = session.scalars(stmt_tx).one()
-        print(result.block_timestamp)
-        print("from: ", get_addr_entry(result.from_address))
-        print("to: ", get_addr_entry(result.to_address))
-        print("value: ", get_value_entry(result.value))
-        print("gas: ", get_gas_entry(result.gas))
-        print("input: ", get_input_entry(result.input))
-        print("status: ", get_status_entry(result.receipt_status))
-
-        stmt_logs = select(Log).where(Log.txhash == txhash).order_by(Log.logpos)
-        logs = session.scalars(stmt_logs).all()
-        actions = []
-        for log in logs:
-            decoded = evt_decoder.decode(log)
-            if decoded:
-                actions.append(decoded)
-        print("\n".join(actions))
+    while True:
+        txhash = input("Please enter txhash:")
+        tx = p.get_tx(txhash)
+        evt_decoder.decode(tx["logs"])
