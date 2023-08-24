@@ -32,6 +32,10 @@ def get_gas_entry(gas: int) -> str:
     return f"{gas} Gwei"
 
 
+def get_gas_price_entry(gas_price: int) -> str:
+    return f"{gas_price / 1e9} Gwei"
+
+
 def get_value_entry(value: int) -> str:
     return f"{value} ETH"
 

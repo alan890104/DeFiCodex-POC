@@ -16,11 +16,12 @@ from sqlalchemy import (
     text,
 )
 from utils import (
-    get_addr_entry,
     get_gas_entry,
+    get_addr_entry,
     get_value_entry,
     get_input_entry,
     get_status_entry,
+    get_gas_price_entry,
     format_timestamp,
 )
 
@@ -94,6 +95,8 @@ if __name__ == "__main__":
         print("To: ", get_addr_entry(tx["to"]))
         print("Value: ", get_value_entry(tx["value"]))
         print("Status: ", get_status_entry(tx["status"]))
+        print("Gas Used: ", get_gas_entry(tx["gas_used"]))
+        print("Gas Price: ", get_gas_price_entry(tx["gas_price"]))
         print("Input Data:\n- ", get_input_entry(tx["input"], evt_df=df))
         print("Transaction Action:")
         results = evt_decoder.decode_all(tx["logs"])

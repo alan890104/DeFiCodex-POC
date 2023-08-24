@@ -384,7 +384,7 @@ class UniswapV3Decoder(BaseUniswapDecoder):
         event_sig = "Swap(address,address,int256,int256,uint160,uint128,int24)"
 
         def decoder(payload: EventPayload) -> str:
-            template = "Swap {get_amount} {get_token} for {pay_amount} {pay_token} on UniswapV3"
+            template = "Swap {pay_amount} {pay_token} for {get_amount} {get_token} on UniswapV3"
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
             token0, token1 = get_addr_entry(token0_addr), get_addr_entry(token1_addr)
             amount0, amount1 = (
