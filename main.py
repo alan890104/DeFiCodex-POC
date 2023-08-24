@@ -1,52 +1,32 @@
+import logging
+import warnings
 from os import getenv
 
-from sqlalchemy import (
-    BigInteger,
-    Column,
-    Date,
-    DateTime,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    Text,
-    create_engine,
-    desc,
-    select,
-    text,
-)
-from utils import (
-    get_gas_entry,
-    get_addr_entry,
-    get_value_entry,
-    get_input_entry,
-    get_status_entry,
-    get_gas_price_entry,
-    format_timestamp,
-)
-
 import pandas as pd
+from ens import ENS
 from multicall import Multicall
+from web3 import Web3
 
-from decoder import EventLogsDecoder
 from decoder import (
+    AAVEV2Decoder,
+    AAVEV3Decoder,
+    BancorV3Decoder,
+    CompoundV3Decoder,
+    CurveV2Decoder,
+    EventLogsDecoder,
     UniswapV2Decoder,
     UniswapV3Decoder,
-    AAVEV3Decoder,
-    AAVEV2Decoder,
-    CompoundV3Decoder,
-    BancorV3Decoder,
-    CurveV2Decoder,
 )
-
-from sqlalchemy.orm import sessionmaker
-from model import Log, Transaction
-
-import logging
-from web3 import Web3
-from ens import ENS
-import warnings
 from provider import get_provider
+from utils import (
+    format_timestamp,
+    get_addr_entry,
+    get_gas_entry,
+    get_gas_price_entry,
+    get_input_entry,
+    get_status_entry,
+    get_value_entry,
+)
 
 warnings.filterwarnings("ignore")
 
