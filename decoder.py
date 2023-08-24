@@ -290,7 +290,6 @@ class UniswapV2Decoder(BaseUniswapDecoder):
         event_sig = "Mint(address,uint256,uint256)"
 
         def decoder(payload: EventPayload) -> str:
-            print(payload["address"])
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
             token0_decimals, token1_decimals = self._get_token_decimals(
                 [token0_addr, token1_addr]

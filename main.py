@@ -92,12 +92,11 @@ if __name__ == "__main__":
         print("Timestamp: ", format_timestamp(tx["block_timestamp"]))
         print("From: ", ns.name(tx["from"]) or get_addr_entry(tx["from"]))
         print("To: ", get_addr_entry(tx["to"]))
-        print("Gas: ", get_gas_entry(tx["gas"]))
         print("Value: ", get_value_entry(tx["value"]))
         print("Status: ", get_status_entry(tx["status"]))
-        print("Input:\n\t", get_input_entry(tx["input"], evt_df=df))
-
+        print("Input Data:\n- ", get_input_entry(tx["input"], evt_df=df))
+        print("Transaction Action:")
         results = evt_decoder.decode_all(tx["logs"])
         for result in results:
             if result:
-                print(result)
+                print("*", result)
