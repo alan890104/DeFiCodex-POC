@@ -10,6 +10,7 @@ from type import LogDict
 from typing import Dict, List, Tuple, Union
 from itertools import chain
 from eth_abi import decode
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 HandleEventFunc = Callable[[Dict], str]
 EventPayload = TypedDict("EventPayload", {"address": str, "params": Dict})
@@ -248,7 +249,7 @@ class UniswapV2Decoder(BaseUniswapDecoder):
         event_sig = "Swap(address,uint256,uint256,uint256,uint256,address)"
 
         def decoder(payload: EventPayload) -> str:
-            template = "Swap {pay_amount} {pay_token} for {get_amount} {get_token} on UniswapV2"
+            template = "Swap {get_amount} {get_token} for {pay_amount} {pay_token}  on UniswapV2"
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
             token0_decimals, token1_decimals = self._get_token_decimals(
                 [token0_addr, token1_addr]
@@ -289,6 +290,7 @@ class UniswapV2Decoder(BaseUniswapDecoder):
         event_sig = "Mint(address,uint256,uint256)"
 
         def decoder(payload: EventPayload) -> str:
+            print(payload["address"])
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
             token0_decimals, token1_decimals = self._get_token_decimals(
                 [token0_addr, token1_addr]
@@ -383,7 +385,7 @@ class UniswapV3Decoder(BaseUniswapDecoder):
         event_sig = "Swap(address,address,int256,int256,uint160,uint128,int24)"
 
         def decoder(payload: EventPayload) -> str:
-            template = "Swap {pay_amount} {pay_token} for {get_amount} {get_token} on UniswapV3"
+            template = "Swap {get_amount} {get_token} for {pay_amount} {pay_token} on UniswapV3"
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
             token0, token1 = get_addr_entry(token0_addr), get_addr_entry(token1_addr)
             amount0, amount1 = (
@@ -670,7 +672,9 @@ class AAVEV3Decoder(BaseDecoder):
         event_sig = "ReserveUsedAsCollateralEnabled(address,address)"
 
         def decoder(payload: EventPayload) -> str:
-            return f"Enable {payload['params']['reserve']} as collateral on {payload['address']}"
+            asset = get_addr_entry(payload["params"]["reserve"])
+            addr = get_addr_entry(payload["address"])
+            return f"Enable {asset} as collateral on {addr}"
 
         return event_sig, decoder
 
@@ -679,7 +683,9 @@ class AAVEV3Decoder(BaseDecoder):
         event_sig = "ReserveUsedAsCollateralDisabled(address,address)"
 
         def decoder(payload: EventPayload) -> str:
-            return f"Disable {payload['params']['reserve']} as collateral on {payload['address']}"
+            asset = get_addr_entry(payload["params"]["reserve"])
+            addr = get_addr_entry(payload["address"])
+            return f"Disable {asset} as collateral on {addr}"
 
         return event_sig, decoder
 
@@ -827,6 +833,8 @@ class EventLogsDecoder:
         evt_df: pd.DataFrame,
         verbose: bool = False,
         logger: logging.Logger = None,
+        *args,
+        **kwargs,
     ) -> None:
         self.hdlrs: Dict[str, HandleEventFunc] = {}
         self.evt_df = evt_df
@@ -878,8 +886,18 @@ class EventLogsDecoder:
             return ""
 
         abi = json.loads(abi)
-        _, params = eth_decode_log(abi, topics, log.get("data", "0x"))
-        return handler({"address": log["address"], "params": params})
+        try:
+            _, params = eth_decode_log(abi, topics, log.get("data", "0x"))
+            result = handler({"address": log["address"], "params": params})
+            return result
+        except Exception as e:
+            if self.verbose:
+                self.logger.error(
+                    f"Failed to decode event {text_sign} with params {params}"
+                )
+                self.logger.exception(e)
+            return ""
 
-    def decode_all(self, logs: List[LogDict]) -> List[str]:
-        return [self.decode(log) for log in logs]
+    def decode_all(self, logs: List[LogDict], workers: int = 10) -> List[str]:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            return list(executor.map(self.decode, logs))

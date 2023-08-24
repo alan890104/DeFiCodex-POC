@@ -54,14 +54,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-db_username = getenv("DB_USERNAME")
-db_password = getenv("DB_PASSWORD")
-db_host = getenv("DB_HOST")
-db_port = getenv("DB_PORT")
-db_name = getenv("DB_NAME")
 provider_url = getenv("WEB3_PROVIDER_URL")
-db_url = f"postgresql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
-engine = create_engine(db_url, echo=True)
 
 if __name__ == "__main__":
     df = pd.read_csv("func_sign.csv")
@@ -74,7 +67,7 @@ if __name__ == "__main__":
     bancor_v3 = BancorV3Decoder(mc=mc, logger=logger)
     curve_v2 = CurveV2Decoder(mc=mc, logger=logger)
 
-    evt_decoder = EventLogsDecoder(evt_df=df, verbose=True, logger=logger)
+    evt_decoder = EventLogsDecoder(evt_df=df, verbose=False, logger=logger)
     evt_decoder.register_class(uniswap_v2)
     evt_decoder.register_class(uniswap_v3)
     evt_decoder.register_class(aave_v2)
@@ -88,6 +81,15 @@ if __name__ == "__main__":
     while True:
         txhash = input("Please enter txhash: ")
         tx = p.get_tx(txhash)
+        print("=====================================")
+        print("Transaction: ")
+        print("Txhash: ", tx["txhash"])
+        print("From: ", get_addr_entry(tx["from"]))
+        print("To: ", get_addr_entry(tx["to"]))
+        print("Gas: ", get_gas_entry(tx["gas"]))
+        print("Value: ", get_value_entry(tx["value"]))
+        print("Input: ", get_input_entry(tx["input"]))
+
         results = evt_decoder.decode_all(tx["logs"])
         for result in results:
             if result:
