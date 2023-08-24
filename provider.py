@@ -8,6 +8,7 @@ from model import Transaction, Log
 from web3 import Web3
 from sqlalchemy import select
 from web3.types import TxReceipt, LogReceipt
+from ens import ENS
 
 
 class BaseProvider(ABC):
@@ -15,7 +16,7 @@ class BaseProvider(ABC):
         pass
 
     @abstractmethod
-    def get_tx(self, txhash: str) -> TxDict:
+    def get_tx_by_hash(self, txhash: str) -> TxDict:
         raise NotImplementedError
 
 
@@ -42,7 +43,7 @@ class SQLProvider:
             for log in logs
         ]
 
-    def get_tx(self, txhash: str) -> TxDict:
+    def get_tx_by_hash(self, txhash: str) -> TxDict:
         SessFactory = sessionmaker(bind=self.engine)
         with SessFactory() as sess:
             stmt_tx = select(Transaction).where(Transaction.txhash == txhash)
@@ -56,6 +57,7 @@ class SQLProvider:
                 "from": result.from_address,
                 "to": result.to_address,
                 "value": result.value,
+                "block_timestamp": result.block_timestamp,
                 "gas": result.gas,
                 "input": result.input,
                 "status": result.receipt_status,
@@ -66,6 +68,7 @@ class SQLProvider:
 class Web3Provider:
     def __init__(self, w3: Web3) -> None:
         self.w3 = w3
+        self.ns = ENS.fromWeb3(w3)
 
     def _get_logs(self, logs: List[LogReceipt]) -> List[LogDict]:
         return [
@@ -78,13 +81,15 @@ class Web3Provider:
             for log in logs
         ]
 
-    def get_tx(self, txhash: str) -> TxDict:
+    def get_tx_by_hash(self, txhash: str) -> TxDict:
         tx = self.w3.eth.get_transaction(txhash)
         rtn: TxReceipt = self.w3.eth.getTransactionReceipt(txhash)
+        block_timestamp = self.w3.eth.get_block(rtn["blockNumber"]).number
         return {
             "txhash": rtn["transactionHash"].hex(),
-            "from": rtn["from"],
-            "to": rtn["to"],
+            "from": tx["from"],
+            "to": tx["to"],
+            "block_timestamp": block_timestamp,
             "value": tx["value"],
             "gas": rtn["gasUsed"],
             "input": tx["input"] if tx["input"] else "0x",

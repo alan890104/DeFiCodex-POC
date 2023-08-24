@@ -16,6 +16,7 @@ TxDict = TypedDict(
         "txhash": str,
         "from": str,
         "to": str,
+        "block_timestamp": int,
         "value": int,
         "gas": int,
         "input": str,

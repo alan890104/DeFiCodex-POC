@@ -2,6 +2,8 @@ import json
 import requests
 from model import Log
 from decimal import Decimal
+import pandas as pd
+from datetime import datetime, timezone
 
 _addr_labels = json.load(open("addr_labels.json", "r"))
 
@@ -48,7 +50,7 @@ def decode_hex_to_utf8(hex: str) -> str | None:
         return None
 
 
-def get_input_entry(input: str) -> str:
+def get_input_entry(input: str, evt_df: pd.DataFrame) -> str:
     # Check if input is empty
     if input == "0x":
         return ""
@@ -59,12 +61,25 @@ def get_input_entry(input: str) -> str:
         return f"Message: {decoded_text}"
 
     # Try to decode as function signature
-    func_sig = input[:10]
-    url = "https://www.4byte.directory/api/v1/signatures"
-    candidates = requests.get(url, params={"hex_signature": func_sig}).json()
-    if not candidates or not candidates.get("result", []):
-        return f"Call Method: {func_sig}"
-    else:
-        results = candidates["result"]
-        results = sorted(results, key=lambda x: int(x["id"]))
-        return f"Call Method: {func_sig} ({results[0]['text_signature']})"
+    byte_sign = input[:10]
+    filtered = evt_df["byte_sign"] == byte_sign
+    candidate = evt_df[filtered][["abi", "text_sign"]].values
+    if len(candidate) == 0:
+        return f"Call Method: {byte_sign}"
+
+    abi, text_sign = candidate[0]
+    return f"Call Method: {text_sign}"
+    # url = "https://www.4byte.directory/api/v1/signatures"
+    # candidates = requests.get(url, params={"hex_signature": func_sig}).json()
+    # if not candidates or not candidates.get("result", []):
+    #     return f"Call Method: {func_sig}"
+    # else:
+    #     results = candidates["result"]
+    #     results = sorted(results, key=lambda x: int(x["id"]))
+    #     return f"Call Method: {func_sig}"
+
+
+def format_timestamp(timestamp: int):
+    dt = datetime.fromtimestamp(timestamp, timezone.utc)
+    formatted_date = dt.strftime("%b-%d-%Y %I:%M:%S %p")
+    return f"{formatted_date} +UTC"

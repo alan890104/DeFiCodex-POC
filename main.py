@@ -21,6 +21,7 @@ from utils import (
     get_value_entry,
     get_input_entry,
     get_status_entry,
+    format_timestamp,
 )
 
 import pandas as pd
@@ -42,10 +43,12 @@ from model import Log, Transaction
 
 import logging
 from web3 import Web3
-
+from ens import ENS
+import warnings
 from provider import get_provider
 
-w3 = Web3()
+warnings.filterwarnings("ignore")
+
 
 logger = logging.getLogger("EventDecoder[Test]")
 handler = logging.StreamHandler()
@@ -55,6 +58,8 @@ logger.addHandler(handler)
 
 
 provider_url = getenv("WEB3_PROVIDER_URL")
+w3 = Web3(Web3.HTTPProvider(provider_url))
+ns = ENS.fromWeb3(w3)
 
 if __name__ == "__main__":
     df = pd.read_csv("func_sign.csv")
@@ -76,19 +81,21 @@ if __name__ == "__main__":
     evt_decoder.register_class(bancor_v3)
     evt_decoder.register_class(curve_v2)
 
-    p = get_provider("web3", w3=Web3(Web3.HTTPProvider(provider_url)))
+    p = get_provider("web3", w3=w3)
 
     while True:
         txhash = input("Please enter txhash: ")
-        tx = p.get_tx(txhash)
+        tx = p.get_tx_by_hash(txhash)
         print("=====================================")
         print("Transaction: ")
         print("Txhash: ", tx["txhash"])
-        print("From: ", get_addr_entry(tx["from"]))
+        print("Timestamp: ", format_timestamp(tx["block_timestamp"]))
+        print("From: ", ns.name(tx["from"]) or get_addr_entry(tx["from"]))
         print("To: ", get_addr_entry(tx["to"]))
         print("Gas: ", get_gas_entry(tx["gas"]))
         print("Value: ", get_value_entry(tx["value"]))
-        print("Input: ", get_input_entry(tx["input"]))
+        print("Status: ", get_status_entry(tx["status"]))
+        print("Input:\n\t", get_input_entry(tx["input"], evt_df=df))
 
         results = evt_decoder.decode_all(tx["logs"])
         for result in results:
