@@ -80,6 +80,6 @@ def get_input_entry(input: str, evt_df: pd.DataFrame) -> str:
 
 
 def format_timestamp(timestamp: int):
-    dt = datetime.fromtimestamp(timestamp, timezone.utc)
+    dt = datetime.fromtimestamp(timestamp)
     formatted_date = dt.strftime("%b-%d-%Y %I:%M:%S %p")
     return f"{formatted_date} +UTC"

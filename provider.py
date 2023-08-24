@@ -84,7 +84,7 @@ class Web3Provider:
     def get_tx_by_hash(self, txhash: str) -> TxDict:
         tx = self.w3.eth.get_transaction(txhash)
         rtn: TxReceipt = self.w3.eth.getTransactionReceipt(txhash)
-        block_timestamp = self.w3.eth.get_block(rtn["blockNumber"]).number
+        block_timestamp = self.w3.eth.get_block(rtn["blockNumber"]).timestamp
         return {
             "txhash": rtn["transactionHash"].hex(),
             "from": tx["from"],
