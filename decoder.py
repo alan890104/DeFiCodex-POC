@@ -10,7 +10,7 @@ from type import LogDict
 from typing import Dict, List, Tuple, Union
 from itertools import chain
 from eth_abi import decode
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 HandleEventFunc = Callable[[Dict], str]
 EventPayload = TypedDict("EventPayload", {"address": str, "params": Dict})
@@ -322,6 +322,23 @@ class UniswapV3Decoder(BaseUniswapDecoder):
     def __init__(self, mc: Multicall, logger: logging.Logger = None):
         super().__init__(mc, logger)
 
+    def _get_tokens_by_position(self, pool_addr: str, pos_id: int) -> Tuple[str, str]:
+        result = self.mc.agg(
+            [
+                Call(
+                    target=pool_addr,
+                    function="positions(uint256)(uint96,address,address,address,uint24,int24,int24,uint128,uint256,uint256,uint128,uint128)",
+                    args=[pos_id],
+                    request_id="positions",
+                ),
+            ]
+        )
+        if len(result) != 1:
+            raise ValueError(f"Cannot find position {pos_id} in {pool_addr}")
+        result = result[0]["result"]
+        token0_addr, token1_addr = result[2], result[3]
+        return token0_addr, token1_addr
+
     def pool_created(self) -> tuple[str, HandleEventFunc]:
         # PoolCreated(address token0,address token1,uint24 fee,int24 tickSpacing,address pool)
         event_sig = "PoolCreated(address,address,uint24,int24,address)"
@@ -341,11 +358,13 @@ class UniswapV3Decoder(BaseUniswapDecoder):
             template = (
                 "Add {amount0} {token0} and {amount1} {token1} liquidity to {pool}"
             )
-            token0_addr, token1_addr = self._get_token_pair(payload["address"])
+            params = payload["params"]
+            token0_addr, token1_addr = self._get_tokens_by_position(
+                payload["address"], params["tokenId"]
+            )
             token0_decimals, token1_decimals = self._get_token_decimals(
                 [token0_addr, token1_addr]
             )
-            params = payload["params"]
             return template.format(
                 amount0=abs(int(params["amount0"]) / 10**token0_decimals),
                 token0=get_addr_entry(token0_addr),
@@ -364,7 +383,7 @@ class UniswapV3Decoder(BaseUniswapDecoder):
             template = (
                 "Remove {amount0} {token0} and {amount1} {token1} liquidity from {pool}"
             )
-            token0_addr, token1_addr = self._get_token_pair(payload["address"])
+            token0_addr, token1_addr = self._get_tokens_by_position(payload["address"])
             token0_decimals, token1_decimals = self._get_token_decimals(
                 [token0_addr, token1_addr]
             )
